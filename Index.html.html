@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Academic & Goals Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght=400..700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #4f46e5;
+            --success: #10b981;
+            --flagged: #ef4444;
+            
+            /* Difficulty Colors */
+            --diff-easy: #22c55e;
+            --diff-medium: #eab308;
+            --diff-hard: #a855f7;
+            --diff-none: #cbd5e1;
+
+            /* Dynamic Font Control variable */
+            --heading-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
+        
+        body { 
+            background-color: var(--bg-main); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-main); 
+            padding: 1.5rem; 
+            overflow-x: hidden; 
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient background overlay helper when an image is loaded */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: inherit;
+            filter: blur(6px);
+            z-index: -2;
+            display: none;
+        }
+        body.has-bg::before { display: block; }
+        body.has-bg::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(248, 250, 252, 0.65);
+            z-index: -1;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; flex: 1; width: 100%; }
+        
+        /* Navigation Tabs with Dynamic Typography */
+        nav { display: flex; gap: 0.5rem; background: var(--card-bg); padding: 0.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; backdrop-filter: blur(8px); }
+        .nav-tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 0.75rem; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            transition: all 0.2s; 
+            font-family: var(--heading-font);
+            font-size: 1.1rem;
+        }
+        .nav-tab.active { background: var(--accent); color: white; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Typography & Cards */
+        h1, h2, h3, .heading-style { font-family: var(--heading-font); }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); backdrop-filter: blur(8px); }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+        /* Footnote / Settings Panel Styles */
+        footer { max-width: 1000px; margin: 2rem auto 0 auto; width: 100%; z-index: 1; position: relative; }
+        .settings-panel { display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border); backdrop-filter: blur(8px); }
+        @media(min-width: 600px) { .settings-panel { grid-template-columns: 1fr 1fr; } }
+        .setting-control { display: flex; flex-direction: column; gap: 0.5rem; }
+        .setting-control label { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
+        .setting-control select, .setting-control input[type="file"] { padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 0.9rem; }
+
+        /* Home Glossary Styles */
+        .glossary-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+        @media(min-width: 600px) { .glossary-grid { grid-template-columns: 1fr 1fr 1fr; } }
+        .glossary-card { border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; min-height: 90px; text-align: center; }
+        .glossary-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* Progress Metrics */
+        .progress-container { background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; margin: 0.5rem 0 1.5rem 0; position: relative; }
+        .progress-bar { background: var(--success); height: 100%; width: 0%; transition: width 0.4s ease; }
+        .pct-badge { background: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
+
+        /* Tab 1: Lecture List & Management Form */
+        .lecture-manager-form { display: flex; flex-direction: column; gap: 0.75rem; background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; }
+        @media(min-width: 600px) { .lecture-manager-form { flex-direction: row; align-items: center; } }
+        .lecture-manager-form input, .lecture-manager-form select { flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+
+        .group-title { background: #e2e8f0; padding: 0.5rem 1rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); border-radius: 6px; margin: 1.5rem 0 0.75rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--heading-font); }
+        .lecture-card-container { display: flex; flex-direction: column; background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 0.5rem; overflow: hidden; }
+        .lecture-swipe-container { position: relative; overflow: hidden; background: #cbd5e1; }
+        .swipe-bg-complete { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--success); display: flex; align-items: center; padding-left: 1rem; color: white; font-weight: bold; font-size: 1.1rem; opacity: 0; transition: opacity 0.1s; }
+        .swipe-bg-flag { position: absolute; right: 0; top: 0; bottom: 0; width: 100%; background: var(--flagged); display: flex; align-items: center; justify-content: flex-end; padding-right: 1rem; color: white; font-weight: bold; font-size: 1.1rem; opacity: 0; transition: opacity 0.1s; }
+        
+        .lecture-row { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 0.75rem; background: var(--card-bg); position: relative; z-index: 2; transition: transform 0.15s ease-out; will-change: transform; cursor: grab; }
+        .checkbox { width: 22px; height: 22px; accent-color: var(--success); cursor: pointer; }
+        .lecture-text { flex: 1; font-size: 0.95rem; line-height: 1.4; user-select: none; font-weight: 500; }
+        .lecture-text.done { color: var(--text-muted); text-decoration: line-through; }
+        .difficulty-logo { width: 26px; height: 26px; border-radius: 50%; font-size: 0.75rem; font-weight: bold; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .flag-btn { font-size: 1.1rem; border: none; background: none; cursor: pointer; filter: grayscale(100%); opacity: 0.3; transition: all 0.2s; flex-shrink: 0; }
+        .flag-btn.active { filter: grayscale(0%); opacity: 1; }
+        .note-toggle-indicator { background: none; border: none; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; font-weight: bold; }
+
+        /* Inline Lecture Note Workspace */
+        .lecture-inline-note-box { display: none; background: #fff; border-top: 1px solid var(--border); padding: 0.75rem 1rem; min-height: 80px; outline: none; line-height: 1.5; font-size: 0.9rem; color: #334155; overflow-y: auto; position: relative; }
+
+        /* Tab 2: Reading Log Elements */
+        .search-bar-container { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .search-bar { flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; background: #fff; color: var(--text-main); }
+        .book-row { display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1rem; background: var(--card-bg); position: relative; }
+        @media(min-width: 600px) { .book-row { flex-direction: row; align-items: center; } }
+        .book-info { flex: 1; }
+        .book-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem; color: var(--accent); cursor: pointer; text-decoration: underline; display: inline-block; font-family: var(--heading-font); }
+        .page-inputs { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
+        .page-inputs input { width: 70px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 0.9rem; }
+        .book-actions-wrapper { display: flex; align-items: center; gap: 1rem; width: 100%; justify-content: space-between; }
+        @media(min-width: 600px) { .book-actions-wrapper { width: auto; justify-content: flex-end; } }
+        .book-progress-wrapper { width: 100%; max-width: 200px; }
+        .book-delete-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.5rem; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .book-delete-btn:hover { background: #fee2e2; }
+
+        /* Split-Pane Sliding Sidebar Drawer Layout */
+        .drawer-overlay { position: fixed; top: 0; right: -100%; width: 100%; max-width: 500px; height: 100%; background: var(--card-bg); box-shadow: -5px 0 25px rgba(15,23,42,0.15); z-index: 2000; transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; border-left: 1px solid var(--border); backdrop-filter: blur(12px); }
+        .drawer-overlay.open { right: 0; }
+        .drawer-header { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+        .drawer-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 0.25rem 0.5rem; }
+        .drawer-body { padding: 1.25rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        
+        /* Floating / Sticky Context Text Formatter Menu Bubble */
+        .floating-formatter { position: absolute; background: #1e293b; color: white; padding: 0.35rem; border-radius: 8px; display: none; gap: 0.35rem; align-items: center; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); pointer-events: auto; }
+        .floating-formatter::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #1e293b transparent; display: block; width: 0; }
+        .float-btn { background: transparent; border: none; color: white; font-weight: bold; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; border-radius: 4px; }
+        .float-btn:hover { background: rgba(255,255,255,0.15); }
+        .float-select { background: #334155; color: white; border: none; font-size: 0.8rem; padding: 0.25rem; border-radius: 4px; max-width: 90px; outline: none; }
+        .note-editor-box { flex: 1; min-height: 250px; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; background: white; overflow-y: auto; outline: none; line-height: 1.6; font-size: 1rem; position: relative; }
+
+        /* Tab 3: Calendar Styles */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .cal-btn { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; text-align: center; }
+        .weekday-label { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); padding: 0.5rem 0; }
+        .calendar-day { background: var(--bg-main); border: 1px solid var(--border); min-height: 85px; border-radius: 8px; padding: 0.4rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; cursor: pointer; position: relative; transition: background 0.2s; background: white; }
+        .calendar-day:hover { background: #f1f5f9; }
+        .calendar-day.empty { background: transparent; border: none; cursor: default; }
+        .day-number { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        .workout-badge-container { display: flex; flex-direction: column; gap: 2px; width: 100%; margin-top: 4px; overflow: hidden; }
+        .workout-dot { background: var(--accent); color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: bold; text-align: left; }
+
+        /* Draggable Range Time Tracker Controls */
+        .time-slider-wrapper { margin: 1.25rem 0; padding: 0.5rem; background: #f1f5f9; border-radius: 8px; display: none; }
+        .range-slider-container { position: relative; width: 100%; height: 40px; margin-top: 0.5rem; background: #cbd5e1; border-radius: 20px; touch-action: none; }
+        .range-slider-fill { position: absolute; height: 100%; background: var(--accent); border-radius: 20px; pointer-events: none; }
+        .range-handle { position: absolute; width: 36px; height: 36px; top: 2px; background: white; border: 3px solid var(--accent); border-radius: 50%; cursor: grab; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .time-readout-labels { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.25rem; color: var(--text-main); }
+
+        /* Dialog Modal Settings (iPad Friendly) */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 1000; padding: 1rem; }
+        .modal-card { background: var(--card-bg); width: 100%; max-width: 460px; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; font-size: 1.25rem; background: none; border: none; cursor: pointer; color: var(--text-muted); }
+        .workout-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 1rem; cursor: pointer; }
+        .workout-option input[type="radio"] { width: 18px; height: 18px; accent-color: var(--accent); }
+        .custom-sport-input { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav id="mainNavBar">
+        <div class="nav-tab active" onclick="switchTab('home')">Home</div>
+        <div class="nav-tab" onclick="switchTab('tab1')">Lecture Checklist</div>
+        <div class="nav-tab" onclick="switchTab('tab2')">Reading Tracker</div>
+        <div class="nav-tab" onclick="switchTab('tab3')">Exercise Logs</div>
+    </nav>
+
+    <div id="home" class="tab-content active">
+        <div class="card">
+            <h1>Home</h1>
+            <p class="subtitle">Quick directory index map. Use the configurations at the bottom of the page to personalize your app theme.</p>
+            
+            <div class="glossary-grid">
+                <div class="glossary-card" onclick="switchTab('tab1')">
+                    <h3 style="color: var(--accent);">📋 Lecture Checklist</h3>
+                </div>
+                <div class="glossary-card" onclick="switchTab('tab2')">
+                    <h3 style="color: var(--accent);">📚 Reading Tracker</h3>
+                </div>
+                <div class="glossary-card" onclick="switchTab('tab3')">
+                    <h3 style="color: var(--accent);">🏋️ Exercise Logs</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab1" class="tab-content">
+        <div class="card">
+            <h2>
+                Lecture Checklist
+                <span class="pct-badge" id="lectureGlobalPct">0% Completed</span>
+            </h2>
+            
+            <div class="lecture-manager-form">
+                <input type="text" id="addLecTitle" placeholder="Type name of new medical lecture topic...">
+                <select id="addLecGroup">
+                    <option value="Medicine: Cardiology">Cardiology</option>
+                    <option value="Medicine: Clinical Pharmacology">Clinical Pharmacology</option>
+                    <option value="Medicine: Dermatology">Dermatology</option>
+                    <option value="Medicine: Endocrinology">Endocrinology</option>
+                    <option value="Medicine: Gastroenterology">Gastroenterology</option>
+                    <option value="Medicine: Haematology">Haematology</option>
+                    <option value="Medicine: Infectious Diseases">Infectious Diseases</option>
+                    <option value="Medicine: Nephrology">Nephrology</option>
+                    <option value="Medicine: Neurology">Neurology</option>
+                    <option value="Medicine: Respiratory Medicine">Respiratory Medicine</option>
+                    <option value="Medicine: Rheumatology">Rheumatology</option>
+                    <option value="Medicine: Geriatrics">Geriatrics</option>
+                    <option value="Medicine: Custom Specialities">Custom Module</option>
+                </select>
+                <button class="cal-btn" onclick="addCustomLectureRow()" style="padding: 0.6rem 1.2rem;">+ Add Topic</button>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="lectureGlobalProgressBar"></div>
+            </div>
+
+            <div id="lectureListMount"></div>
+        </div>
+    </div>
+
+    <div id="tab2" class="tab-content">
+        <div class="card">
+            <h2>Personal Reading Log Vault</h2>
+            <p class="subtitle">Type below to search, or type a name and press <strong>+ Add Book</strong> to track a new title. Tap title to view notes.</p>
+            
+            <div class="search-bar-container">
+                <input type="text" class="search-bar" id="bookSearch" oninput="renderBooks()" placeholder="🔍 Search logs or type a new title here...">
+                <button class="cal-btn" onclick="addNewBookPrompt()">+ Add Book</button>
+            </div>
+            
+            <div id="bookListMount"></div>
+        </div>
+    </div>
+
+    <div id="tab3" class="tab-content">
+        <div class="card">
+            <div class="calendar-header">
+                <button class="cal-btn" onclick="adjustMonth(-1)">◀ Prev</button>
+                <h2 id="calendarMonthLabel" style="margin:0;">Month Year</h2>
+                <button class="cal-btn" onclick="adjustMonth(1)">Next ▶</button>
+            </div>
+            <p class="subtitle">Tap any date block below to track sessions via custom duration sliders.</p>
+            
+            <div class="calendar-grid" id="calendarGridMount"></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="settings-panel">
+        <div class="setting-control">
+            <label>Header Font</label>
+            <select id="fontSelector" onchange="changeHeadingFont(this.value)">
+                <option value="system">System UI (Default)</option>
+                <option value="garamond">Garamond</option>
+                <option value="caveat">Caveat (Handwritten)</option>
+            </select>
+        </div>
+        <div class="setting-control">
+            <label>Wallpaper</label>
+            <input type="file" id="bgUploader" accept="image/*" onchange="uploadCanvasBackground(event)">
+        </div>
+    </div>
+</footer>
+
+<div class="drawer-overlay" id="notesDrawer">
+    <div class="drawer-header">
+        <h3 id="drawerBookTitle" style="font-size:1.1rem; max-width:80%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Notes Log</h3>
+        <button class="drawer-close" onclick="closeNotesDrawer()">×</button>
+    </div>
+    <div class="drawer-body">
+        <p class="subtitle" style="margin-bottom:0.75rem;">Highlight selected text strings to access the floating quick formatting bubble.</p>
+        <div class="note-editor-box" id="drawerRichContentBox" contenteditable="true" oninput="saveActiveBookNote()"></div>
+    </div>
+</div>
+
+<div class="floating-formatter" id="floatingBubble">
+    <button class="float-btn" onmousedown="runCmd(event, 'bold')">B</button>
+    <button class="float-btn" onmousedown="runCmd(event, 'italic')" style="font-style:italic;">I</button>
+    <button class="float-btn" onmousedown="runCmd(event, 'underline')" style="text-decoration:underline;">U</button>
+    <select class="float-select" onchange="runCmd(event, 'foreColor', this.value); this.selectedIndex=0;">
+        <option value="" selected disabled>🌈 Text</option>
+        <option value="#ef4444">Red</option>
+        <option value="#f97316">Orange</option>
+        <option value="#eab308">Yellow</option>
+        <option value="#22c55e">Green</option>
+        <option value="#3b82f6">Blue</option>
+        <option value="#4f46e5">Indigo</option>
+        <option value="#a855f7">Violet</option>
+        <option value="#0f172a">Dark</option>
+    </select>
+    <select class="float-select" onchange="runCmd(event, 'hiliteColor', this.value); this.selectedIndex=0;">
+        <option value="" selected disabled>🖍️ Marker</option>
+        <option value="#86efac">Neon Green</option>
+        <option value="#fef08a">Neon Yellow</option>
+        <option value="#fbcfe8">Neon Pink</option>
+        <option value="#93c5fd">Neon Blue</option>
+        <option value="transparent">Clear</option>
+    </select>
+</div>
+
+<div class="modal-overlay" id="workoutModal">
+    <div class="modal-card">
+        <button class="modal-close" onclick="closeWorkoutModal()">×</button>
+        <h3 id="modalDateTitle" style="margin-bottom: 1rem; font-size: 1.2rem;">Log Workout Track</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:0.25rem;">
+            <label class="workout-option"><input type="radio" name="w_opt" value="Running" onclick="toggleSliderVisibility(true)"> <span>🏃 Running</span></label>
+            <label class="workout-option"><input type="radio" name="w_opt" value="Leg Day" onclick="toggleSliderVisibility(true)"> <span>🏋️ Leg Day</span></label>
+            <label class="workout-option"><input type="radio" name="w_opt" value="Back and Arm Day" onclick="toggleSliderVisibility(true)"> <span>💪 Back and Arm Day</span></label>
+            <label class="workout-option"><input type="radio" name="w_opt" value="Yoga" onclick="toggleSliderVisibility(true)"> <span>🧘 Yoga</span></label>
+            <label class="workout-option" style="flex-direction:column; align-items:flex-start;">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <input type="radio" name="w_opt" value="Other Sports" id="radioOtherSports" onclick="toggleSliderVisibility(true)"> <span>🚴 Other Sports</span>
+                </div>
+                <input type="text" class="custom-sport-input" id="customSportText" placeholder="Enter custom sport name...">
+            </label>
+        </div>
+
+        <div class="time-slider-wrapper" id="sliderWrapper">
+            <div class="time-readout-labels">
+                <span>Start: <span id="lblStartTime">08:00</span></span>
+                <span>End: <span id="lblEndTime">10:00</span></span>
+            </div>
+            <div class="range-slider-container" id="sliderContainer">
+                <div class="range-slider-fill" id="sliderFill"></div>
+                <div class="range-handle" id="handleStart">|</div>
+                <div class="range-handle" id="handleEnd">|</div>
+            </div>
+        </div>
+        
+        <button class="cal-btn" style="width:100%; margin-top:1rem; padding:0.75rem;" onclick="saveWorkoutSession()">Save Workouts</button>
+        <button class="cal-btn" style="width:100%; margin-top:0.5rem; padding:0.5rem; background:#ef4444;" onclick="deleteWorkoutSession()">Delete Log</button>
+    </div>
+</div>
+
+<script>
+    // PRE-POPULATED COMPREHENSIVE CURRICULAR SYLLABUS
+    const cleanLecturesDataset = [
+        { id: "1", group: "Medicine: Cardiology", title: "High blood pressure: hypertension" },
+        { id: "2", group: "Medicine: Cardiology", title: "Chest pain on exertion: ischaemic heart disease; angina pectoris" },
+        { id: "3", group: "Medicine: Cardiology", title: "Accelerating chest pain: Acute coronary syndrome" },
+        { id: "4", group: "Medicine: Cardiology", title: "Sudden severe chest pain: acute myocardial infarction; aortic dissection" },
+        { id: "5", group: "Medicine: Cardiology", title: "Shortness of breath on exertion: heart failure" },
+        { id: "6", group: "Medicine: Cardiology", title: "Syncope and irregular heartbeat: Cardiac arrhythmia; Heart blocks, Bradycardia" },
+        { id: "7", group: "Medicine: Cardiology", title: "Fever and a murmur. Valvular heart diseases: Infective endocarditis" },
+        { id: "8", group: "Medicine: Cardiology", title: "Inherited Cardiac conditions" },
+        { id: "9", group: "Medicine: Clinical Pharmacology", title: "Clinical pharmacokinetics" },
+        { id: "10", group: "Medicine: Clinical Pharmacology", title: "Am I prescribing the right drug?" },
+        { id: "11", group: "Medicine: Clinical Pharmacology", title: "Is this the best drug for me?" },
+        { id: "12", group: "Medicine: Clinical Pharmacology", title: "Fever" },
+        { id: "13", group: "Medicine: Dermatology", title: "Skin rash: Doctor. I have a rash (history, examination and basic investigations)" },
+        { id: "14", group: "Medicine: Dermatology", title: "I have an itchy rash (eczema, urticaria, tinea infection and psoriasis)" },
+        { id: "15", group: "Medicine: Dermatology", title: "It is red and painful (bacterial and viral skin infections)" },
+        { id: "16", group: "Medicine: Dermatology", title: "Treatments for skin diseases (eczema, psoriasis and urticaria)" },
+        { id: "17", group: "Medicine: Endocrinology", title: "Polyuria and polydipsia: glucose metabolism; diabetes mellitus; diabetic ketoacidosis" },
+        { id: "18", group: "Medicine: Endocrinology", title: "Deterioration of eyesight in a diabetic patient: diabetic complications" },
+        { id: "19", group: "Medicine: Endocrinology", title: "I am overweight, doctor: obesity; Hyperlipidaemia" },
+        { id: "20", group: "Medicine: Endocrinology", title: "I am losing weight and sweating all the time: causes of severe weight loss; thyrotoxicosis; hypothyroidism" },
+        { id: "21", group: "Medicine: Endocrinology", title: "I keep on bumping into people on my side: pituitary tumours; hypopituitarism" },
+        { id: "22", group: "Medicine: Endocrinology", title: "Back pain in an elderly woman: osteoporosis and related fractures" },
+        { id: "23", group: "Medicine: Endocrinology", title: "Confused and dehydrated: hypercalcaemia, hypocalcaemia" },
+        { id: "24", group: "Medicine: Endocrinology", title: "I have fluctuating BP: Cushing syndrome; adrenal diseases and tumours; other endocrine tumours" },
+        { id: "25", group: "Medicine: Gastroenterology", title: "Viral hepatitis HAV / HBV / HCV / HEV" },
+        { id: "26", group: "Medicine: Gastroenterology", title: "MASLD and Alcoholic Liver Disease" },
+        { id: "27", group: "Medicine: Gastroenterology", title: "A jaundiced and incoherent patient: liver failure" },
+        { id: "28", group: "Medicine: Gastroenterology", title: "Abdominal distension: ascites and cirrhosis" },
+        { id: "29", group: "Medicine: Gastroenterology", title: "Upper abdominal pain: peptic ulcer, pancreatitis and gallstone" },
+        { id: "30", group: "Medicine: Gastroenterology", title: "Coffee ground vomitus/tarry stool: upper GI bleeding" },
+        { id: "31", group: "Medicine: Gastroenterology", title: "Indigestion and 'heartburn': nausea and vomiting; gastric motility problems; benign oesophageal lesions" },
+        { id: "32", group: "Medicine: Gastroenterology", title: "Chronic diarrhea: irritable bowel syndrome and inflammatory bowel disease" },
+        { id: "33", group: "Medicine: Haematology", title: "Pallor: diagnosis of anaemia; nutritional anaemia; anaemia of systemic diseases" },
+        { id: "34", group: "Medicine: Haematology", title: "Family history of anaemia: inherited causes of anaemia; haemolytic anaemia; aplastic anaemia" },
+        { id: "35", group: "Medicine: Haematology", title: "Abnormal bleeding after tooth extraction: bleeding tendency; thrombocytopenia" },
+        { id: "36", group: "Medicine: Haematology", title: "High white cell count: acute and chronic leukaemia; bone marrow transplantation; immunogenetics" },
+        { id: "37", group: "Medicine: Haematology", title: "Generalised Lymphadenopathy: Differential diagnosis and principle of management" },
+        { id: "38", group: "Medicine: Haematology", title: "An old man with bone pain and anaemia: multiple myeloma; monoclonal gammopathy" },
+        { id: "39", group: "Medicine: Haematology", title: "Leg swelling and chest pain: deep vein thrombosis; pulmonary embolism; Thrombophilia" },
+        { id: "40", group: "Medicine: Haematology", title: "Fever after a blood transfusion: transfusion and related problems" },
+        { id: "41", group: "Medicine: Haematology", title: "Splenomegaly: common causes of splenomegaly; myeloproliferative diseases" },
+        { id: "42", group: "Medicine: Haematology", title: "Many members of the family have anaemia" },
+        { id: "43", group: "Medicine: Infectious Diseases", title: "HIV positive: HIV related diseases, accidental needle prick injury" },
+        { id: "44", group: "Medicine: Nephrology", title: "Electrolyte and Acid-Base Disorders" },
+        { id: "45", group: "Medicine: Nephrology", title: "Glomerular and Tubulo-interstitial Diseases and Acute Kidney Injury" },
+        { id: "46", group: "Medicine: Nephrology", title: "Chronic Kidney Disease and its Complications" },
+        { id: "47", group: "Medicine: Nephrology", title: "Renal Replacement Therapies" },
+        { id: "48", group: "Medicine: Nephrology", title: "Drugs and the Kidney" },
+        { id: "49", group: "Medicine: Nephrology", title: "I want to donate my organs: Brain death, Organ donation, Psychosocial issues (Medicine part)" },
+        { id: "50", group: "Medicine: Neurology", title: "Where is the lesion? Symptoms and signs in Neurology" },
+        { id: "51", group: "Medicine: Neurology", title: "Severe headache: headache and neuralgia, neuro-imaging I" },
+        { id: "52", group: "Medicine: Neurology", title: "Sudden hemiplegia and dysphagia: strokes, neuro-imaging II" },
+        { id: "53", group: "Medicine: Neurology", title: "Seizure and loss of consciousness: Delirium and encephalopathy; epilepsy; coma and brain death; care of unconscious patients; electrophysiology I" },
+        { id: "54", group: "Medicine: Neurology", title: "Unsteady gait: cerebellar lesions; movement disorders; Parkinsonism" },
+        { id: "55", group: "Medicine: Neurology", title: "Fever and confusion: meningitis and encephalitis; suppurative brain infection" },
+        { id: "56", group: "Medicine: Neurology", title: "Generalised muscle weakness: myasthenia gravis; myopathy and myositis; neuropathy; neurophysiology II" },
+        { id: "57", group: "Medicine: Neurology", title: "Neuroimmunological disorders of the central nervous system" },
+        { id: "58", group: "Medicine: Respiratory Medicine", title: "A cyanotic, dyspneic elderly man: respiratory failure" },
+        { id: "59", group: "Medicine: Respiratory Medicine", title: "Fever and purulent sputum: influenza, pneumonia, common organisms and anti-microbial agents for pneumonia" },
+        { id: "60", group: "Medicine: Respiratory Medicine", title: "Cough and wheezing: asthma; allergic lung diseases" },
+        { id: "61", group: "Medicine: Respiratory Medicine", title: "Cough in a chronic smoker: COPD; smoking cessation" },
+        { id: "62", group: "Medicine: Respiratory Medicine", title: "Pleural effusion in a chronic smoker: pleural effusion; lung cancer" },
+        { id: "63", group: "Medicine: Respiratory Medicine", title: "Shortness of breath in a construction site worker: occupational lung diseases; pulmonary fibrosis; workman's compensation" },
+        { id: "64", group: "Medicine: Respiratory Medicine", title: "High fever, low BP: septic shock" },
+        { id: "65", group: "Medicine: Respiratory Medicine", title: "A fatigued and sleepy patient: sleep and breathing, sleep apnoea" },
+        { id: "66", group: "Medicine: Rheumatology", title: "Multiple joint pain: Rheumatoid arthritis and the concept of inflammatory arthritis" },
+        { id: "67", group: "Medicine: Rheumatology", title: "Painful red joint: monoarthropathy, gouty arthritis, septic arthritis, haemarthrosis" },
+        { id: "68", group: "Medicine: Rheumatology", title: "Facial rash and painful fingers: SLE" },
+        { id: "69", group: "Medicine: Rheumatology", title: "Fingers turn white and blue: Scleroderma and MCTD, Raynaud's disease, other rheumatic diseases" },
+        { id: "70", group: "Medicine: Rheumatology", title: "Urticaria, angioedema and anaphylaxis" },
+        { id: "71", group: "Medicine: Rheumatology", title: "Why do I always get sick? Introduction to immunodeficiencies" },
+        { id: "72", group: "Medicine: Geriatrics", title: "Common neurological problems in older people" },
+        { id: "73", group: "Medicine: Geriatrics", title: "Frailty in older people" },
+        { id: "74", group: "Medicine: Geriatrics", title: "Prescribing in older people" },
+        { id: "75", group: "Medicine: Geriatrics", title: "Comprehensive geriatric assessment and rehabilitation in older people" }
+    ];
+
+    let localCache = JSON.parse(localStorage.getItem('academicTrackerState_v8'));
+    let systemState;
+
+    let currentDisplayDate = new Date();
+    let activeSelectedDayString = ""; 
+    let activeEditingBookId = null; 
+    let activeEditingLectureId = null; 
+
+    // Horizontal slider position calculations
+    let sliderStartPct = 33; 
+    let sliderEndPct = 45;   
+
+    if (localCache && localCache.lectures && localCache.books && localCache.workouts) {
+        systemState = localCache;
+        if (systemState.savedFont) changeHeadingFont(systemState.savedFont);
+        if (systemState.savedBg) applyBgStyle(systemState.savedBg);
+    } else {
+        systemState = {
+            lectures: cleanLecturesDataset.map(l => ({ ...l, completed: false, difficulty: 'none', flagged: false, notes: "" })),
+            books: [
+                { id: "b1", title: "A Room of One's Own", totalPages: 120, readPages: 45, notes: "" },
+                { id: "b2", title: "To the Lighthouse", totalPages: 209, readPages: 209, notes: "" },
+                { id: "b3", title: "Clinical Internal Medicine Frameworks", totalPages: 840, readPages: 120, notes: "" }
+            ],
+            workouts: {},
+            savedFont: "system",
+            savedBg: ""
+        };
+        localStorage.setItem('academicTrackerState_v8', JSON.stringify(systemState));
+    }
+
+    const diffColors = { none: 'var(--diff-none)', easy: 'var(--diff-easy)', medium: 'var(--diff-medium)', hard: 'var(--diff-hard)' };
+
+    function syncStorage() {
+        localStorage.setItem('academicTrackerState_v8', JSON.stringify(systemState));
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        const tabs = ['home', 'tab1', 'tab2', 'tab3'];
+        const idx = tabs.indexOf(tabId);
+        if(idx !== -1) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+        
+        // Hide contextual formatting menu bubble on view changes
+        document.getElementById('floatingBubble').style.display = 'none';
+
+        if(tabId === 'tab1') renderLectures();
+        if(tabId === 'tab2') renderBooks();
+        if(tabId === 'tab3') renderCalendar();
+    }
+
+    // TYPOGRAPHY CONFIGURATION ENGINE
+    function changeHeadingFont(fontKey) {
+        let fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        if (fontKey === 'garamond') fontStack = 'Garamond, Georgia, serif';
+        if (fontKey === 'caveat') fontStack = '"Caveat", cursive, sans-serif';
+        
+        document.documentElement.style.setProperty('--heading-font', fontStack);
+        systemState.savedFont = fontKey;
+        document.getElementById('fontSelector').value = fontKey;
+        syncStorage();
+    }
+
+    // WALLPAPER CANVAS FILE UPLOADER ENGINE
+    function uploadCanvasBackground(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            applyBgStyle(dataUrl);
+            systemState.savedBg = dataUrl;
+            syncStorage();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function applyBgStyle(url) {
+        if (!url) return;
+        document.body.style.backgroundImage = `url('${url}')`;
+        document.body.classList.add('has-bg');
+    }
+
+    // TAB 1: WATCHLIST & INLINE FORMAT NOTE LABS
+    function addCustomLectureRow() {
+        const titleInput = document.getElementById('addLecTitle');
+        const groupInput = document.getElementById('addLecGroup');
+        const title = titleInput.value.trim();
+        if (!title) return;
+
+        const newLec = {
+            id: 'lec_' + Date.now(),
+            group: groupInput.value,
+            title: title,
+            completed: false,
+            difficulty: 'none',
+            flagged: false,
+            notes: ""
+        };
+
+        systemState.lectures.push(newLec);
+        titleInput.value = "";
+        syncStorage();
+        renderLectures();
+    }
+
+    function renderLectures() {
+        const mount = document.getElementById('lectureListMount');
+        mount.innerHTML = '';
+
+        const groups = systemState.lectures.reduce((acc, obj) => {
+            if (!acc[obj.group]) acc[obj.group] = [];
+            acc[obj.group].push(obj);
+            return acc;
+        }, {});
+
+        let total = systemState.lectures.length;
+        let ticked = systemState.lectures.filter(l => l.completed).length;
+        let pct = total > 0 ? Math.round((ticked / total) * 100) : 0;
+
+        document.getElementById('lectureGlobalPct').innerText = `${pct}% (${ticked}/${total} Completed)`;
+        document.getElementById('lectureGlobalProgressBar').style.width = `${pct}%`;
+
+        for (const groupName in groups) {
+            const header = document.createElement('div');
+            header.className = 'group-title';
+            header.innerText = groupName;
+            mount.appendChild(header);
+
+            groups[groupName].forEach(lec => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'lecture-card-container';
+                
+                cardContainer.innerHTML = `
+                    <div class="lecture-swipe-container">
+                        <div class="swipe-bg-complete" id="bgL-${lec.id}">✓ Complete</div>
+                        <div class="swipe-bg-flag" id="bgR-${lec.id}">🚩 Flag Review</div>
+                        <div class="lecture-row" id="row-${lec.id}" 
+                             onmousedown="startSwipe(event, '${lec.id}')" 
+                             ontouchstart="startSwipe(event, '${lec.id}')">
+                            <input type="checkbox" class="checkbox" ${lec.completed ? 'checked' : ''} onchange="toggleLecCheck('${lec.id}')" onclick="event.stopPropagation()">
+                            <span class="lecture-text ${lec.completed ? 'done' : ''}">${lec.title}</span>
+                            <button class="difficulty-logo" style="background-color: ${diffColors[lec.difficulty]}" onclick="event.stopPropagation(); rotateDifficulty('${lec.id}')">Ω</button>
+                            <button class="flag-btn ${lec.flagged ? 'active' : ''}" onclick="event.stopPropagation(); toggleLecFlag('${lec.id}')">🚩</button>
+                            <button class="note-toggle-indicator" onclick="event.stopPropagation(); toggleLectureNoteDropdown('${lec.id}')">▼ Notes</button>
+                        </div>
+                    </div>
+                    <div class="lecture-inline-note-box" id="noteBox-${lec.id}" contenteditable="true" 
+                         placeholder="Jot down areas of further understanding here..." 
+                         oninput="saveLectureInlineNote('${lec.id}')"
+                         onfocus="setActiveEditorContext('lecture', '${lec.id}')">
+                         ${lec.notes || ""}
+                    </div>
+                `;
+                mount.appendChild(cardContainer);
+            });
+        }
+    }
+
+    function toggleLectureNoteDropdown(id) {
+        const targetBox = document.getElementById(`noteBox-${id}`);
+        if (!targetBox) return;
+        const isOpen = targetBox.style.display === "block";
+        targetBox.style.display = isOpen ? "none" : "block";
+        if (!isOpen) targetBox.focus();
+    }
+
+    function saveLectureInlineNote(id) {
+        const target = systemState.lectures.find(l => l.id === id);
+        const boxContent = document.getElementById(`noteBox-${id}`).innerHTML;
+        if (target) {
+            target.notes = boxContent;
+            syncStorage();
+        }
+    }
+
+    // INTERACTIVE TRACKING DRAG SYSTEM
+    let startX = 0, currentX = 0, activeSwipeId = null;
+    function startSwipe(e, id) {
+        if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        activeSwipeId = id;
+        startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        document.addEventListener('mousemove', moveSwipe);
+        document.addEventListener('touchmove', moveSwipe, {passive: false});
+        document.addEventListener('mouseup', endSwipe);
+        document.addEventListener('touchend', endSwipe);
+    }
+
+    function moveSwipe(e) {
+        if (!activeSwipeId) return;
+        currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let diff = currentX - startX;
+        
+        if (diff > 140) diff = 140;
+        if (diff < -140) diff = -140;
+
+        const row = document.getElementById(`row-${activeSwipeId}`);
+        const bgL = document.getElementById(`bgL-${activeSwipeId}`);
+        const bgR = document.getElementById(`bgR-${activeSwipeId}`);
+
+        if(row) {
+            row.style.transform = `translateX(${diff}px)`;
+            if(diff > 20) { bgL.style.opacity = Math.min(1, diff/80); bgR.style.opacity = 0; }
+            else if(diff < -20) { bgR.style.opacity = Math.min(1, -diff/80); bgL.style.opacity = 0; }
+        }
+        if(e.cancelable) e.preventDefault();
+    }
+
+    function endSwipe() {
+        if (!activeSwipeId) return;
+        let diff = currentX - startX;
+        const row = document.getElementById(`row-${activeSwipeId}`);
+        
+        document.removeEventListener('mousemove', moveSwipe);
+        document.removeEventListener('touchmove', moveSwipe);
+        document.removeEventListener('mouseup', endSwipe);
+        document.removeEventListener('touchend', endSwipe);
+
+        if (row) {
+            row.style.transform = 'translateX(0px)';
+            if (diff > 90) toggleLecCheck(activeSwipeId);
+            else if (diff < -90) toggleLecFlag(activeSwipeId);
+        }
+        activeSwipeId = null;
+    }
+
+    function toggleLecCheck(id) {
+        const target = systemState.lectures.find(l => l.id === id);
+        if(target) target.completed = !target.completed;
+        syncStorage();
+        renderLectures();
+    }
+
+    function toggleLecFlag(id) {
+        const target = systemState.lectures.find(l => l.id === id);
+        if(target) target.flagged = !target.flagged;
+        syncStorage();
+        renderLectures();
+    }
+
+    function rotateDifficulty(id) {
+        const target = systemState.lectures.find(l => l.id === id);
+        if(target) {
+            const modes = ['none', 'easy', 'medium', 'hard'];
+            target.difficulty = modes[(modes.indexOf(target.difficulty) + 1) % modes.length];
+        }
+        syncStorage();
+        renderLectures();
+    }
+
+    // TAB 2: READING VAULT MODULES (WITH DELETE ACTION FUNCTION)
+    function renderBooks() {
+        const mount = document.getElementById('bookListMount');
+        const query = document.getElementById('bookSearch').value.toLowerCase().trim();
+        mount.innerHTML = '';
+
+        const filtered = systemState.books.filter(b => b.title.toLowerCase().includes(query));
+
+        if(filtered.length === 0) {
+            mount.innerHTML = `<div style="padding:1.5rem; text-align:center; color:var(--text-muted);">No books found matching your view query.</div>`;
+            return;
+        }
+
+        filtered.forEach(book => {
+            let bookPct = book.totalPages > 0 ? Math.min(100, Math.round((book.readPages / book.totalPages) * 100)) : 0;
+            const row = document.createElement('div');
+            row.className = 'book-row';
+            row.innerHTML = `
+                <div class="book-info">
+                    <div class="book-title" onclick="openNotesDrawer('${book.id}')">${book.title}</div>
+                    <div class="page-inputs">
+                        <span>Pages:</span>
+                        <input type="number" value="${book.readPages}" oninput="updatePages('${book.id}', 'read', this.value)">
+                        <span>/</span>
+                        <input type="number" value="${book.totalPages}" oninput="updatePages('${book.id}', 'total', this.value)">
+                    </div>
+                </div>
+                <div class="book-actions-wrapper">
+                    <div class="book-progress-wrapper">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:bold; margin-bottom:2px;"><span>Progress</span><span>${bookPct}%</span></div>
+                        <div class="progress-container" style="margin:0; height:8px;"><div class="progress-bar" style="width:${bookPct}%; background:var(--accent);"></div></div>
+                    </div>
+                    <button class="book-delete-btn" onclick="deleteBookRow('${book.id}')" title="Delete Book Log">🗑️</button>
+                </div>
+            `;
+            mount.appendChild(row);
+        });
+    }
+
+    function updatePages(id, field, val) {
+        const book = systemState.books.find(b => b.id === id);
+        if(!book) return;
+        let num = parseInt(val, 10) || 0;
+        if(field === 'read') book.readPages = num;
+        else book.totalPages = num || 1;
+        syncStorage();
+        renderBooks();
+    }
+
+    function addNewBookPrompt() {
+        const inputField = document.getElementById('bookSearch');
+        const txt = inputField.value.trim();
+        if(!txt) return;
+        systemState.books.push({ id: 'b_'+Date.now(), title: txt, totalPages: 100, readPages: 0, notes: "" });
+        inputField.value = "";
+        syncStorage();
+        renderBooks();
+    }
+
+    function deleteBookRow(id) {
+        if (confirm("Are you sure you want to permanently delete this book log and its associated notes?")) {
+            systemState.books = systemState.books.filter(b => b.id !== id);
+            if (activeEditingBookId === id) {
+                closeNotesDrawer();
+            }
+            syncStorage();
+            renderBooks();
+        }
+    }
+
+    // SPLIT SIDEBAR LAB DRAWER CONTROL LOGIC
+    function openNotesDrawer(id) {
+        const book = systemState.books.find(b => b.id === id);
+        if(!book) return;
+        setActiveEditorContext('book', id);
+        document.getElementById('drawerBookTitle').innerText = book.title;
+        document.getElementById('drawerRichContentBox').innerHTML = book.notes || "<div>Begin writing notes here...</div>";
+        document.getElementById('notesDrawer').classList.add('open');
+    }
+
+    function closeNotesDrawer() {
+        document.getElementById('notesDrawer').classList.remove('open');
+        document.getElementById('floatingBubble').style.display = 'none';
+    }
+
+    function saveActiveBookNote() {
+        if(!activeEditingBookId) return;
+        const book = systemState.books.find(b => b.id === activeEditingBookId);
+        if(book) {
+            book.notes = document.getElementById('drawerRichContentBox').innerHTML;
+            syncStorage();
+        }
+    }
+
+    // MULTI-CONTEXT SELECTION INTERCEPTOR FOR FLOATING FORMATTER
+    let currentEditorMode = ""; 
+    function setActiveEditorContext(mode, id) {
+        currentEditorMode = mode;
+        if(mode === 'book') { activeEditingBookId = id; activeEditingLectureId = null; }
+        if(mode === 'lecture') { activeEditingLectureId = id; activeEditingBookId = null; }
+    }
+
+    const bubble = document.getElementById('floatingBubble');
+    document.addEventListener('selectionchange', () => {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.toString().trim() === "") {
+            bubble.style.display = 'none';
+            return;
+        }
+
+        const node = sel.anchorNode.parentElement;
+        const insideBookEditor = document.getElementById('drawerRichContentBox').contains(node);
+        const insideLectureEditor = node.closest('.lecture-inline-note-box') !== null;
+
+        if(!insideBookEditor && !insideLectureEditor) {
+            bubble.style.display = 'none';
+            return;
+        }
+
+        if(insideLectureEditor && currentEditorMode !== 'lecture') {
+            const boxId = node.closest('.lecture-inline-note-box').id.split('-')[1];
+            setActiveEditorContext('lecture', boxId);
+        }
+
+        const range = sel.getRangeAt(0);
+        const rects = range.getClientRects();
+        if(rects.length > 0) {
+            const lastRect = rects[0];
+            bubble.style.display = 'flex';
+            bubble.style.left = `${lastRect.left + window.scrollX + (lastRect.width/2) - (bubble.offsetWidth/2)}px`;
+            bubble.style.top = `${lastRect.top + window.scrollY - bubble.offsetHeight - 8}px`;
+        }
+    });
+
+    function runCmd(e, command, val = null) {
+        e.preventDefault();
+        document.execCommand(command, false, val);
+        if(currentEditorMode === 'book') saveActiveBookNote();
+        if(currentEditorMode === 'lecture') saveLectureInlineNote(activeEditingLectureId);
+    }
+
+    // TAB 3: CALENDAR WORKOUT TRACKER 
+    function renderCalendar() {
+        const mount = document.getElementById('calendarGridMount');
+        mount.innerHTML = '';
+        const year = currentDisplayDate.getFullYear();
+        const month = currentDisplayDate.getMonth();
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('calendarMonthLabel').innerText = `${monthNames[month]} ${year}`;
+
+        const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        weekdays.forEach(d => { const el = document.createElement('div'); el.className = 'weekday-label'; el.innerText = d; mount.appendChild(el); });
+
+        const firstIdx = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstIdx; i++) {
+            const b = document.createElement('div'); b.className = 'calendar-day empty'; mount.appendChild(b);
+        }
+
+        for (let dNum = 1; dNum <= totalDays; dNum++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
+            cell.onclick = () => openWorkoutModal(dateStr);
+
+            const label = document.createElement('span'); label.className = 'day-number'; label.innerText = dNum; cell.appendChild(label);
+            const badgeBox = document.createElement('div'); badgeBox.className = 'workout-badge-container';
+
+            if(systemState.workouts[dateStr]) {
+                const data = systemState.workouts[dateStr];
+                const item = document.createElement('div');
+                item.className = 'workout-dot';
+                item.innerText = `${data.type} (${data.start}-${data.end})`;
+                badgeBox.appendChild(item);
+            }
+            cell.appendChild(badgeBox);
+            mount.appendChild(cell);
+        }
+    }
+
+    function adjustMonth(offset) { currentDisplayDate.setMonth(currentDisplayDate.getMonth() + offset); renderCalendar(); }
+
+    function toggleSliderVisibility(show) {
+        document.getElementById('sliderWrapper').style.display = show ? "block" : "none";
+        const isOther = document.getElementById('radioOtherSports').checked;
+        document.getElementById('customSportText').style.display = isOther ? "block" : "none";
+    }
+
+    function openWorkoutModal(dateKey) {
+        activeSelectedDayString = dateKey;
+        document.getElementById('modalDateTitle').innerText = `Log Workout: ${dateKey}`;
+        
+        document.querySelectorAll('input[name="w_opt"]').forEach(r => r.checked = false);
+        document.getElementById('customSportText').value = "";
+        toggleSliderVisibility(false);
+
+        if(systemState.workouts[dateKey]) {
+            const log = systemState.workouts[dateKey];
+            let found = false;
+            document.querySelectorAll('input[name="w_opt"]').forEach(r => {
+                if(r.value === log.type) { r.checked = true; found = true; }
+            });
+            if(!found) {
+                document.getElementById('radioOtherSports').checked = true;
+                document.getElementById('customSportText').value = log.type;
+            }
+            toggleSliderVisibility(true);
+            
+            sliderStartPct = timeToPct(log.start);
+            sliderEndPct = timeToPct(log.end);
+        } else {
+            sliderStartPct = 33; 
+            sliderEndPct = 45;   
+        }
+        updateSliderUI();
+        document.getElementById('workoutModal').style.display = "flex";
+    }
+
+    function closeWorkoutModal() { document.getElementById('workoutModal').style.display = "none"; }
+
+    // TOUCH DUAL SLIDER TRACKING LOGIC
+    const container = document.getElementById('sliderContainer');
+    const hStart = document.getElementById('handleStart');
+    const hEnd = document.getElementById('handleEnd');
+    const fill = document.getElementById('sliderFill');
+
+    hStart.addEventListener('mousedown', (e) => trackHandle(e, 'start'));
+    hStart.addEventListener('touchstart', (e) => trackHandle(e, 'start'));
+    hEnd.addEventListener('mousedown', (e) => trackHandle(e, 'end'));
+    hEnd.addEventListener('touchstart', (e) => trackHandle(e, 'end'));
+
+    function trackHandle(e, mode) {
+        e.preventDefault();
+        function move(ev) {
+            let clientX = ev.type.includes('touch') ? ev.touches[0].clientX : ev.clientX;
+            let bounds = container.getBoundingClientRect();
+            let pct = Math.round(((clientX - bounds.left) / bounds.width) * 100);
+            pct = Math.max(0, Math.min(100, pct));
+            
+            if(mode === 'start') {
+                sliderStartPct = Math.min(pct, sliderEndPct - 4);
+            } else {
+                sliderEndPct = Math.max(pct, sliderStartPct + 4);
+            }
+            updateSliderUI();
+        }
+        function stop() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('touchmove', move);
+            document.removeEventListener('mouseup', stop);
+            document.removeEventListener('touchend', stop);
+        }
+        document.addEventListener('mousemove', move);
+        document.addEventListener('touchmove', move, {passive:false});
+        document.addEventListener('mouseup', stop);
+        document.addEventListener('touchend', stop);
+    }
+
+    function updateSliderUI() {
+        hStart.style.left = `calc(${sliderStartPct}% - 18px)`;
+        hEnd.style.left = `calc(${sliderEndPct}% - 18px)`;
+        fill.style.left = `${sliderStartPct}%`;
+        fill.style.width = `${sliderEndPct - sliderStartPct}%`;
+
+        document.getElementById('lblStartTime').innerText = pctToTime(sliderStartPct);
+        document.getElementById('lblEndTime').innerText = pctToTime(sliderEndPct);
+    }
+
+    function pctToTime(pct) {
+        let totalMinutes = Math.round((pct / 100) * 1440);
+        let hrs = Math.floor(totalMinutes / 60);
+        let mins = Math.floor((totalMinutes % 60) / 15) * 15; 
+        if(mins === 60) { hrs++; mins = 0; }
+        return `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`;
+    }
+
+    function timeToPct(timeStr) {
+        let parts = timeStr.split(':');
+        let minutes = (parseInt(parts[0],10) * 60) + parseInt(parts[1],10);
+        return Math.round((minutes / 1440) * 100);
+    }
+
+    function saveWorkoutSession() {
+        const rad = document.querySelector('input[name="w_opt"]:checked');
+        if(!rad || !activeSelectedDayString) return;
+
+        let finalType = rad.value;
+        if(finalType === "Other Sports") {
+            finalType = document.getElementById('customSportText').value.trim() || "Other Sport";
+        }
+
+        systemState.workouts[activeSelectedDayString] = {
+            type: finalType,
+            start: pctToTime(sliderStartPct),
+            end: pctToTime(sliderEndPct)
+        };
+        syncStorage();
+        closeWorkoutModal();
+        renderCalendar();
+    }
+
+    function deleteWorkoutSession() {
+        if(activeSelectedDayString && systemState.workouts[activeSelectedDayString]) {
+            delete systemState.workouts[activeSelectedDayString];
+            syncStorage();
+        }
+        closeWorkoutModal();
+        renderCalendar();
+    }
+</script>
+
+</body>
+</html>
